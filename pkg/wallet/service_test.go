@@ -201,3 +201,107 @@ func TestService_Repeat_fail(t *testing.T) {
 		return
 	}
 }
+
+func TestService_FavoritePayment_success(t *testing.T) {
+	s := newTService()
+
+	_, payments, err := s.addAccount(defaultTAccount)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	payment := payments[0]
+
+	favoritePayment, err := s.FavoritePayment(payment.ID, "me")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	got, err := s.FindFavoriteByID(favoritePayment.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if !reflect.DeepEqual(favoritePayment, got) {
+		t.Errorf("expected %v, got this %v", favoritePayment, got)
+		return
+	}
+}
+
+func TestService_FavoritePayment_fail(t *testing.T) {
+	s := newTService()
+
+	_, _, err := s.addAccount(defaultTAccount)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	_, favErr := s.FavoritePayment("xyz", "me")
+	if favErr == nil {
+		t.Errorf("FavoritePayment() should return nil")
+		return
+	}
+}
+
+func TestService_PayFromFavorite_success(t *testing.T) {
+	s := newTService()
+
+	_, payments, err := s.addAccount(defaultTAccount)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	payment := payments[0]
+
+	favorite, err := s.FavoritePayment(payment.ID, "me")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	paymentFromFavorite, err := s.PayFromFavorite(favorite.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	got, err := s.FindPaymentByID(paymentFromFavorite.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if !reflect.DeepEqual(paymentFromFavorite, got) {
+		t.Errorf("expected %v, got this %v", paymentFromFavorite, got)
+		return
+	}
+}
+
+func TestService_PayFromFavorite_fail(t *testing.T) {
+	s := newTService()
+
+	_, payments, err := s.addAccount(defaultTAccount)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	payment := payments[0]
+
+	_, favErr := s.FavoritePayment(payment.ID, "me")
+	if err != nil {
+		t.Error(favErr)
+		return
+	}
+
+	_, payErr := s.PayFromFavorite("xyz")
+	if payErr == nil {
+		t.Errorf("PayFromFavorite() should return nil")
+		return
+	}
+}
